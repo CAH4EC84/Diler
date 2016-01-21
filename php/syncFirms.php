@@ -5,7 +5,9 @@
  * Date: 18.01.2016
  * Time: 13:25
  * Синхронизация списка фирм из основной БД и нашей
+ * Данный модуль не актуален 21.01.2016
  */
+
 require_once '../conf/login.php';
 $mssqlConn= sqlsrv_connect($serverName,$connectionInfo);
 

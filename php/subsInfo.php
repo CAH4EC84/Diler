@@ -5,6 +5,7 @@
  * Date: 19.01.2016
  * Time: 11:29
  * Модуль поиска данных о подписке на основании её номера или частичного названия.
+ * Данный модуль не актуален 21.01.2016
  */
 require_once '../conf/login.php';
 $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
