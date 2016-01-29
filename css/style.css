@@ -17,9 +17,9 @@
     border-bottom: 2px solid #fff;
 }
 /*Если чекбокс выбран*/
-.maincontainer > #subsTab:checked ~ .maincontainer-subs,
-.maincontainer > #firmsTab:checked ~ .maincontainer-firms,
-.maincontainer > #moreTab:checked ~ .maincontainer-more {
+.maincontainer > #subsInfo:checked ~ .maincontainer-subsInfo,
+.maincontainer > #firmsInfo:checked ~ .maincontainer-firmsInfo,
+.maincontainer > #moreInfo:checked ~ .maincontainer-moreInfo {
     display: block;
     padding: 5px;
     border: 1px solid #aaa;

@@ -12,23 +12,18 @@ require_once '../conf/login.php';
 $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 //Получаем полную информацию для каждой вкладки.
-//$tab = $_POST['tab'];
-$tab = 'firmsInfo';
+$tab = $_POST['tab'];
+print_r($_POST);
+//$tab = 'firmsInfo';
 
 //Функиция получения данных и отрисовки таблицы
 GetInfo($mssqlConn,$tab);
-
-
-
-//Для уточнения данных передается активная вкладка и выбранные на ней элементы.
-$currentTab = $_POST['maincontainerCurrentTab']; //Активная вкладка
-$checkboxs = $_POST['maincontainerCheckboxDetails']; //выбранные для для уточнения
-
 
 //Получания всех данных из таблицы, и списка её полей
 function GetInfo($conn,$table) {
     //Заголовок таблицы
     $queryFields="Select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS  where TABLE_NAME='".$table."'";
+    echo $queryFields."<hr>";
     $resultFields=sqlsrv_query($conn,$queryFields) or die( print_r( sqlsrv_errors(), true));
     $tableHead= '<table border="1"> <thead><tr>';
     $columnCount=0;
@@ -40,6 +35,7 @@ function GetInfo($conn,$table) {
 
     //Данные в таблице
     $queryData="select * from ". $table." order by 1";
+    echo $queryData."<hr>";
     $resultData=sqlsrv_query($conn,$queryData) or die( print_r( sqlsrv_errors(), true));
     $tableBody='<tbody>';
         while ($row2=sqlsrv_fetch_array($resultData,SQLSRV_FETCH_NUMERIC)) {
@@ -50,6 +46,7 @@ function GetInfo($conn,$table) {
         $tableBody.='</tr>';
     };
     $tableBody.='</tbody></table>';
+
 
 //Отрисовка таблицы
     $tableHead.=$tableBody;
