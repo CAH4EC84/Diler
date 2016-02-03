@@ -13,46 +13,66 @@ $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 //Получаем полную информацию для каждой вкладки.
 $tab = $_POST['tab'];
-print_r($_POST);
-//$tab = 'firmsInfo';
 
-//Функиция получения данных и отрисовки таблицы
-GetInfo($mssqlConn,$tab);
 
-//Получания всех данных из таблицы, и списка её полей
-function GetInfo($conn,$table) {
-    //Заголовок таблицы
-    $queryFields="Select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS  where TABLE_NAME='".$table."'";
-    echo $queryFields."<hr>";
+//Функиции получения данных и отрисовки таблицы
+//GetInfo($mssqlConn,$tab);
+
+
+//Формируем заголовоки столбцов таблицы и строки для поиска
+$thead=MakeTableHead(GetTableHeaders($mssqlConn,$tab),$tab);
+
+//Содержимое таблицы
+$tbody=GetTableData($mssqlConn,$tab);
+
+//Отрисовка таблицы
+DrawTable($thead,$tbody);
+
+function GetTableHeaders($conn,$table) {
+    $queryFields="Select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='".$table."'";
     $resultFields=sqlsrv_query($conn,$queryFields) or die( print_r( sqlsrv_errors(), true));
-    $tableHead= '<table border="1"> <thead><tr>';
-    $columnCount=0;
-    while ($row=sqlsrv_fetch_array($resultFields,SQLSRV_FETCH_NUMERIC)) {
-        $tableHead.='<td>'.$row[0].'</td>';
-        $columnCount++;
-    };
-    $tableHead.='</tr></thead>';
+    return $resultFields;
+}
 
-    //Данные в таблице
+function MakeTableHead($th,$tid) {
+    //Заголовоки столбцов
+    $headersCount=0;
+    $tableHead='<table border="1" id="'.$tid.'Table"> <thead><tr>';
+        while ($row = sqlsrv_fetch_array($th,SQLSRV_FETCH_NUMERIC)) {
+            $tableHead.='<td>'.$row[0].'</td>';
+            $headersCount++;
+        };
+    $tableHead.="</tr>";
+
+    //Строка поиска
+    $sRow="<tr>";
+    for ($i=0;$i<$headersCount; $i++) {
+        $sRow.= '<td class="inputFilter"><input type="text"></td>';
+    }
+    $tableHead.=$sRow."</tr></thead>";
+    return $tableHead;
+}
+
+function GetTableData($conn,$table) {
     $queryData="select * from ". $table." order by 1";
-    echo $queryData."<hr>";
     $resultData=sqlsrv_query($conn,$queryData) or die( print_r( sqlsrv_errors(), true));
-    $tableBody='<tbody>';
-        while ($row2=sqlsrv_fetch_array($resultData,SQLSRV_FETCH_NUMERIC)) {
+    $tableBody='';
+    while ($row2=sqlsrv_fetch_array($resultData,SQLSRV_FETCH_NUMERIC)) {
         $tableBody.='<tr>';
-            for ($j=0; $j<$columnCount; $j++) {
-            $tableBody.='<td>'.$row2[$j].'</td>';
+        for ($j=0; $j<count($row2); $j++) {
+            $tableBody.='<td>'.mb_strtolower($row2[$j]).'</td>';
         }
         $tableBody.='</tr>';
     };
     $tableBody.='</tbody></table>';
-
-
-//Отрисовка таблицы
-    $tableHead.=$tableBody;
-    echo $tableHead;
-
+    return $tableBody;
 }
+
+function DrawTable ($th,$tb) {
+    echo $th.$tb;
+}
+
+
 
 
 
