@@ -12,6 +12,13 @@
     bottom: 1px;
     background: #fff;
 }
+
+/*Скрываем дополнительные блоки*/
+.maincontainer .details{
+    background: grey;
+
+}
+
 /*Убираем нижнию границу у вкладок*/
 .maincontainer input[type="radio"]:checked + label {
     border-bottom: 2px solid #fff;
@@ -24,3 +31,20 @@
     padding: 5px;
     border: 1px solid #aaa;
 }
+
+
+/*Ширина столбцов*/
+input {
+    background: azure;
+}
+    input:focus {
+        background: bisque;
+    }
+
+table {
+    width:100%;
+}
+    table td {
+        text-align:center;
+        width: 25%;
+    }
