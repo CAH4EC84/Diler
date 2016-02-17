@@ -2,20 +2,16 @@
 /**
  * Created by PhpStorm.
  * User: Alexander
- * Date: 21.01.2016
- * Time: 16:18
- * При открытии сайта JS вызывает данный модуль, последовательно передавая ему имена вкладок.
- * Модуль заполняет данными все необходимые вкладки.
- * Далее если пользователь желает уточнить данные то в данный скрипт передаются запрашиваемые данные.
- */
-require_once '../conf/login.php';
+ * Date: 17.02.2016
+ * Time: 13:25
+ */require_once '../conf/login.php';
 $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 //Получаем полную информацию для каждой вкладки.
-$tab = $_POST['tab'];
-$predicate = $_POST['queryId'];
+$tab = 'subsInfo';
+//$predicate = $_POST['queryId'];
 //Функиции получения данных и отрисовки таблицы
-//GetInfo($mssqlConn,$tab);
+
 
 
 //Формируем заголовоки столбцов таблицы и строки для поиска
@@ -36,19 +32,12 @@ function GetTableHeaders($conn,$table) {
 function MakeTableHead($th,$tid) {
     //Заголовоки столбцов
     $headersCount=0;
-    $tableHead='<table class="table" border="1" id="'.$tid.'Table"> <thead><tr>';
-        while ($row = sqlsrv_fetch_array($th,SQLSRV_FETCH_NUMERIC)) {
-            $tableHead.='<td>'.($row[0]).'</td>';
-            $headersCount++;
-        };
-    $tableHead.="</tr>";
-
-    //Строка поиска
-    $sRow="<tr>";
-    for ($i=0;$i<$headersCount; $i++) {
-        $sRow.= '<td class="inputFilter"><input type="text"></td>';
-    }
-    $tableHead.=$sRow."</tr></thead>";
+    $tableHead='<table> <thead><tr>';
+    while ($row = sqlsrv_fetch_array($th,SQLSRV_FETCH_NUMERIC)) {
+        $tableHead.='<td>'.($row[0]).'</td>';
+        $headersCount++;
+    };
+    $tableHead.="</tr></thead>";
     return $tableHead;
 }
 
@@ -74,10 +63,3 @@ function GetTableData($conn,$table,$condition) {
 function DrawTable ($th,$tb) {
     echo $th.$tb;
 }
-
-
-
-
-
-
-

@@ -11,7 +11,9 @@ $(document).ready(function () {
     for (var i = 0; i < tabs.length; i++) {
         console.log('Try to ask ' + tabs[i].id);
         getInfo(tabs[i].id);
+        resizeColumns(tabs[i].id+'Table');
     }
+
 
     //для каждой вкладки, в её основную таблицу, в строки поиска, добавляем функцию поиска по мере набора текста.
     $(".maincontainer>input").each (function () {
@@ -50,7 +52,7 @@ $(document).ready(function () {
     })
 
     //Событие для клика по строчкам таблицы - получение дополнительной информации из представлений в БД
-    $("tbody tr").click( function () {
+    $("tbody tr").dblclick( function () {
     //Функция переноса данных из строки таблицы в окна фильтрации
         //Передаем данные по кликнутой строке в строки поиска и скрываем всю таблицу
         var pT=$(this).parent().parent()
@@ -103,11 +105,40 @@ function getInfoDetail(tab,queryId) {
     console.log("getInfoDetail");
     console.log(tab);
     console.log(queryId);
+
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange=function () {
+        if (xhr.status==200 && xhr.readyState==4) {
+            $('[class$='+tab+'] + .details').html(xhr.responseText);
+        }
+    };
+    var params="tab="+tab+'Details'+'&queryId='+queryId;
+    xhr.open("POST","php/getInfo.php",false);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.send(params);
+
 }
 
 
+//Масштабируем таблички
 
 
+function resizeColumns (tableName) {
+    console.log('Resize '+tableName);
+    var firstLine= $('#'+tableName+" tbody tr:first>td");
+ $('#'+tableName+" tbody tr:first>td").each (function () {
+ var colNum='#'+tableName+" tbody td:nth-child("+($(this).index()+1)+")"
+     console.log(colNum);
+ lengths=[]
+ $(colNum).each ( function () {
+ lengths.push( $(this).text().length );
+ })
+     console.log ('char count-'+Math.max.apply(Math,lengths) )
+ var maxL=Math.max.apply(Math,lengths)+'px'
+ $('#'+tableName+" thead td:nth-child("+($(this).index()+1)+")"+".inputFilter").children().attr('size',Math.max.apply(Math,lengths))
+ $()
+ })
+}
 
 
 

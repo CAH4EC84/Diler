@@ -1,3 +1,9 @@
+
+* {
+    font-size: 15px;
+}
+
+
 .maincontainer > div, .maincontainer > input {
     display: none;
 }
@@ -41,10 +47,15 @@ input {
         background: bisque;
     }
 
-table {
-    width:100%;
+.table {
+    margin: auto;
 }
-    table td {
-        text-align:center;
-        width: 25%;
-    }
+/*
+.table tbody td:nth-child(1) { width: 30px; }
+.table tbody td:nth-child(2) { width: 370px; }
+.table tbody td:nth-child(3) { width: 320px; }
+.table tbody td:nth-child(4) { width: 10px; }
+*/
+.table table td {text-align:center;}
+
+/*input {width: 200px}*/
