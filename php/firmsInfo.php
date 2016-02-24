@@ -10,15 +10,6 @@
 require_once '../conf/login.php';
 $conn=sqlsrv_connect($serverName,$connectionInfo);
 
-//   параметру url добавл€ютс€ 4 параметра, как описано в colModel.
-// ћы должны считать эти параметры, чтобы создать SQL-запрос.
-// ¬ настройках таблицы мы указали, что используем GET-метод.
-// » мы должны использовать подход€щий способ, чтобы считать их.
-// ¬ нашем случае это $_GET. ≈сли бы мы указали, что хотим
-// использовать POST-метод, то мы бы использовали $_POST.
-// ћожно использовать $_REQUEST, который содержит переменные
-// с GET и POST одновременно..
-// ќбратитесь к документации дл€ большей информации.
 // ѕолучаем номер страницы. —начала jqGrid ставит его в 1.
 $page = $_GET['page'];
 
@@ -31,12 +22,7 @@ $sidx = $_GET['sidx'];
 
 // ѕор€док сортировки.
 $sord = $_GET['sord'];
-/*
-$page = 1;
-$limit =50;
-$sidx = 'id';
-$sord = 'desc';
-*/
+
 // ≈сли колонка сортировки не указана, то будем
 // сортировать по первой колонке.
 if(!$sidx) $sidx =1;
@@ -46,10 +32,15 @@ $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 
 // ¬ычисл€ем количество строк. Ёто необходимо дл€ постраничной навигации.
-$query="select Count(*) as count from subsInfo";
+$query="select Count(*) as count from firmsInfo";
 $result=sqlsrv_query($conn,$query) or die( print_r( sqlsrv_errors(), true));
 $row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC);
 $count = $row['count'];
+
+//если параметр rowNum кстановлен в -1 ($limit), возвращаем таблицу целиком.
+if ($limit=-1) {
+    $limit=$count;
+}
 
 // ¬ычисл€ем общее количество страниц.
 if( $count > 0 && $limit > 0) {
@@ -74,11 +65,11 @@ if($start <0) $start = 0;
 $query = "SELECT *
         FROM (
            SELECT *, ROW_NUMBER() OVER (ORDER BY $sidx $sord) AS x
-           FROM subsInfo
+           FROM firmsInfo
         ) AS y
         WHERE y.x BETWEEN ".$start." AND ".($start+$limit)." ORDER BY y.x, $sidx $sord;";
 // «апрос дл€ получени€ данных.
-//echo $query.'<hr>';
+
 $result=sqlsrv_query($conn,$query) or die( print_r( sqlsrv_errors(), true));
 
 // «аголовок с указанием содержимого.
@@ -94,9 +85,12 @@ $s .= "<records>".$count."</records>";
 while($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
     $s .= "<row id='". $row['id']."'>";
     $s .= "<cell>". $row['id']."</cell>";
+    $s .= "<cell>". $row['parent_id']."</cell>";
+    $s .= "<cell>". $row['nodes_id']."</cell>";
     $s .= "<cell><![CDATA[". $row['name']."]]></cell>";
-    $s .= "<cell>". $row['timeOf']."</cell>";
-    $s .= "<cell>". $row['is_activee']."</cell>";
+    $s .= "<cell><![CDATA[". $row['address1']."]]></cell>";
+    $s .= "<cell><![CDATA[". $row['region']."]]></cell>";
+    $s .= "<cell>". $row['subs_id']."</cell>";
     $s .= "</row>";
 }
 $s .= "</rows>";
