@@ -31,14 +31,42 @@ if(!$sidx) $sidx =1;
 $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 
+//Поисковый запрос
+if ( isset($_GET['_search']) && ($_GET['_search']=='true')  ) {
+    $qWhere = ''; //уточняющий запрос
+    $allowedFields = array('nodes_id', 'name', 'parent', 'address1', 'region'); //разрещенные поля в запросе
+    $allowedOperations = array('AND', 'OR'); //разрешенные логические операции
+
+    //Если используется панель поиска
+    if (!isset($_GET['filters'])) {
+        $qWhere = ' WHERE ';
+        $params = array();
+        $firstElem = true;
+
+        foreach ($allowedFields as $searchField) { //перебираем все доступные колонки и соединяем их через условие поиска AND %(?)%
+            if ( isset($_GET[$searchField])) {
+                if ($firstElem) {
+                    $qWhere.=$searchField.' LIKE (?)';
+                    $params[] = '%' .$_GET[$searchField]. '%';
+                    $firstElem = false;
+                } else {
+                    $qWhere.=' AND '.$searchField.' LIKE (?)';
+                    $params[] = '%' .$_GET[$searchField]. '%';
+                }
+
+            }
+        }
+    }
+}
+
 // Вычисляем количество строк. Это необходимо для постраничной навигации.
-$query="select Count(*) as count from firmsInfo";
-$result=sqlsrv_query($conn,$query) or die( print_r( sqlsrv_errors(), true));
+$query="select Count(*) as count from firmsInfo".$qWhere;
+$result=sqlsrv_query($conn,$query,$params) or die( print_r( sqlsrv_errors(), true));
 $row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC);
 $count = $row['count'];
 
-//если параметр rowNum кстановлен в -1 ($limit), возвращаем таблицу целиком.
-if ($limit=-1) {
+//если параметр rowNum установлен в -1 ($limit), возвращаем таблицу целиком.
+if ($limit=='all') {
     $limit=$count;
 }
 
@@ -62,19 +90,17 @@ $start = $limit*$page - $limit;
 // выбрал 0 в качестве запрашиваемой страницы.
 if($start <0) $start = 0;
 
+// Запрос для получения данных.
 $query = "SELECT *
         FROM (
            SELECT *, ROW_NUMBER() OVER (ORDER BY $sidx $sord) AS x
-           FROM firmsInfo
+           FROM firmsInfo".$qWhere."
         ) AS y
         WHERE y.x BETWEEN ".$start." AND ".($start+$limit)." ORDER BY y.x, $sidx $sord;";
-// Запрос для получения данных.
-
-$result=sqlsrv_query($conn,$query) or die( print_r( sqlsrv_errors(), true));
+$result=sqlsrv_query($conn,$query,$params) or die( print_r( sqlsrv_errors(), true));
 
 // Заголовок с указанием содержимого.
 header("Content-type: text/xml;charset=utf-8");
-
 $s = "<?xml version='1.0' encoding='utf-8'?>";
 $s .=  "<rows>";
 $s .= "<page>".$page."</page>";
@@ -83,14 +109,12 @@ $s .= "<records>".$count."</records>";
 
 // Обязательно передайте текстовые данные в CDATA
 while($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
-    $s .= "<row id='". $row['id']."'>";
-    $s .= "<cell>". $row['id']."</cell>";
-    $s .= "<cell>". $row['parent_id']."</cell>";
+    $s .= "<row>";
     $s .= "<cell>". $row['nodes_id']."</cell>";
     $s .= "<cell><![CDATA[". $row['name']."]]></cell>";
+    $s .= "<cell><![CDATA[". $row['parent']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['address1']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['region']."]]></cell>";
-    $s .= "<cell>". $row['subs_id']."</cell>";
     $s .= "</row>";
 }
 $s .= "</rows>";

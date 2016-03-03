@@ -1,0 +1,7 @@
+.ui-autocomplete {
+    overflow: auto;
+    width: 200px;
+    max-height: 200px;
+    margin: 30px auto;
+    font: bold italic 15px serif;
+}
