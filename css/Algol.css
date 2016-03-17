@@ -5,3 +5,16 @@
     margin: 30px auto;
     font: bold italic 15px serif;
 }
+
+#sqlStructureResult {
+    text-align: left;
+    width: auto;
+
+}
+
+.mychart,.queryChart {
+    float:left;
+    border: lime solid 1px;
+    height:600px;
+    width: 90%
+}

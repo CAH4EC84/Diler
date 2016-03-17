@@ -4,65 +4,164 @@
  * User: Alexander
  * Date: 02.03.2016
  * Time: 10:08
- * ��������� ��� XML
+ * Заголовок для XML
  * header('Content-Type: text/xml');
  */
+require_once 'sql-formatter-master/lib/SqlFormatter.php'; // Внешняя билиотека форматирующая SQL для удобного чтения.
 
 
-require_once 'sqlParse/dqml2tree.php';
-$nodesId=$_GET['nodes'];
-$docId=$_GET['doc'];
-
-$fieldList= [
-    'PRICE2','PRICE3','PRICE5','PRICE10','PRICE15','PRICE20','NEW_PRICE1','NEW_COND1','NEW_PRICE2','NEW_COND2',
-    'NAME_FORM','MAKER_COUNTRY','PRICE1',
-    'INT_EXTKEY','PACK1','QUANTITY','LIFETIME',
-    'COMMENT_','NODES_ID','VENDOR','Doc_Type',
-    'COSTMAKER','COSTMAKER_NDS','NDS','UPAK','Z','EAN','COSTREESTR'
+$fieldAlias=['Код товара'=>'INT_EXTKEY',
+    'Продукция'=>'NAME_FORM',
+    'Производитель Страна'=>'MAKER_COUNTRY',
+    'Цена'=>'PRICE1',
+    'Кратность'=>'PACK1',
+    'Кол-во в упакове'=>'UPAK',
+    'Остаток на складе'=>'QUANTITY',
+    'Срок годности'=>'LIFETIME',
+    'Цена производителя'=>'COSTMAKER',
+    'НДС'=>'NDS',
+    'Цена производителя с НДС'=>'COSTMAKER_NDS',
+    'Цена Реестра без НДС'=>'COSTREESTR',
+    'Акция'=>'Z',
+    'Комментарий'=>'COMMENT_',
+    'ШтрихКод'=>'EAN',
+    'Узел'=>'NODES_ID',
+    'Номер документа'=>'DOC_TYPE',
+    'Минимальный заказ в штуках'=>'MINZAKAZ'
 ];
 
-$xml = simplexml_load_file('../files/accessQueries.xml');
-//���������� ������� ��� �������������� �����.
+$nodesId=$_GET['nodes_id'];
+$docId=$_GET['doc_id'];
+$xml = simplexml_load_file('//meddb/d$/medUni/bin/accessQueries.xml');
+
+//определяем базовый или индивидуальный прайс.
 if ($docId) { $checkQ=$nodesId."_".$docId;} else { $checkQ=$nodesId;}
-
-
-//������� ����� ������� �� ���� � ���� ���������
+//Находим текст запроса по ноду и типу документа
 $query = $xml->queries->xpath('query[@name="'.$checkQ.'"]');
-echo "check query:".$query[0]['name']."<hr>";
-echo $query[0];
 
-//��������  ����� ������� ��� ��� ��������
-$sql_query =$query[0];
-$query2tree = new dqml2tree($sql_query);
-$sql_tree = $query2tree->make();
+//Определяем есть ли у запроса подзапрос. для этого выделяем из секции FROM название таблицы и ещем запрос с таким именем в xml файле
+if (stripos($query[0],'where') ) {$delimeter='where'; } else {$delimeter=';';}
+$tempName=substr($query[0],stripos($query[0],'from')+5,stripos($query[0],$delimeter)-stripos($query[0],'from')-5);
+$subquery=$xml->queries->xpath('query[@name="'.$tempName.'"]') ;
 
-//���������� ���� �� � ������� ���������.
-$subquery=$xml->queries->xpath('query[@name="'.$sql_tree['SQL']['SELECT']['FROM']['TABLE'].'"]') ;
 if (!$subquery) {
-    echo "NO SUBQUERY TRY TO PARSE INST->SELECT <pre>";
-    //print_r( $sql_tree['SQL']['INSERT']['INTO']['1|*INSERT']['INTO'] );
-    //print_r( $sql_tree['SQL']['SELECT']);
-    //print_r( $sql_tree['SQL']['SELECT']['FROM'] );
-    for ($i=0;$i<count($sql_tree['SQL']['SELECT']); $i++) {
-        foreach($sql_tree['SQL']['SELECT'][$i.'|*SELECT'] as $key=>$value) {
-            print_r($value);
-            //$str = serialize($value);echo $str."<br />";
+    $tableName=trim($tempName);
+} else {
+    if (stripos($subquery[0],'where') ) {$delimeter='where'; } else {$delimeter=';';}
+    $tableName=trim( substr($subquery[0],stripos($subquery[0],'from')+5,stripos($subquery[0],$delimeter)-stripos($subquery[0],'from')-6) );
+}
+
+//connect sourceTableName
+$queryInfo=['nodesId'=>$nodesId,'docId'=>$docId,
+    'querySQL'=>trim(strval($query[0])),'subQuerySQL'=>trim(strval($subquery[0]))];
+
+$queryInfo['ParsedSQL']=parseSQL($query[0],$subquery[0]);
+
+
+
+
+//Вывод результата обработки
+//echo SqlFormatter::format($query);
+echo '<span class="querySQL">'.SqlFormatter::format($queryInfo['querySQL']).'</span> <hr>'; //Текст запроса
+echo '<span class="querySQL">'.SqlFormatter::format($queryInfo['subQuerySQL']).'</span> <hr>'; //Подзапрос
+
+if ($queryInfo['ParsedSQL']['subList']) {
+    echo "<pre>";
+    //print_r($queryInfo['ParsedSQL']['subList']);
+    foreach ($queryInfo['ParsedSQL']['subList'] as $key=>$value) {
+        $key=strtoupper(trim($key));
+        $alias = array_search($key,$fieldAlias);
+        if ($alias===false) {
+            $result[$key]=$value;
+        } else {
+            $result[$alias]=$value;
         }
     }
+    print_r($result);
     echo "</pre>";
+} else {
+    echo "<pre>";
+    $tmp=array_combine($queryInfo['ParsedSQL']['insertList'], $queryInfo['ParsedSQL']['selectList']);
+    //print_r($tmp);
+    foreach ($tmp as $key=>$value) {
+        $key=strtoupper(trim($key));
+        $alias = array_search($key,$fieldAlias);
+        if ($alias===false) {
+            $result[$key]=$value;
+        } else {
+            $result[$alias]=$value;
+        }
+    }
+    print_r($result);
+    echo "</pre>";
+}
 
-    //foreach ($fieldList as $validFileld) {}
+
+function parseSQL ($q,$subq) {
+    //INSERT SECTION
+    $insertFileds=substr($q,(stripos($q,'INSERT INTO ALL_PRICES (')+24),stripos($q,'SELECT')-(stripos($q,'INSERT INTO ALL_PRICES (')+26));
+    $insertArr= explode(',',$insertFileds);
+
+    if (!$subq) { //Если нет подзапроса
+        //SELECT SECTION
+        $selectFields=substr($q,(stripos($q,'SELECT')+6),stripos($q,'from')-(stripos($q,'SELECT')+6));
+        $selectArr= explode(',',$selectFields);
     } else {
-    echo "SUBQUERY FOUND <br>";
-    echo $subquery[0]['name'] . "<hr>";
-    echo $subquery[0];
+        //SELECT SECTION for SubQuery
+        $selectFields=substr($q,(stripos($q,'SELECT')+6),stripos($q,'from')-(stripos($q,'SELECT')+6));
+        $selectArr= explode(',',$selectFields);
+        $selectArr=array_combine($insertArr, $selectArr);
+        $subArr= explode(',',substr( $subq,8,stripos($subq,'from')-8));
+
+        //Сопоставляем INSERT и подзапрос.
+        foreach ($selectArr as $keyIndex=>$subField) {
+            $key=trim($subField);
+            $keyfound=false;
+            $key=trim(substr($key,stripos($key,'.')+1)); //обрезаем от точки и до конца строки
+            if (stripos($key,' as ')) { //если есть as значит используется псевдоним для псевдонима......
+                $noaskey=substr($key,0,stripos($key,' as'));
+                $key='AS '.substr($key,0,stripos($key,' as'));
+            } else {
+                $noaskey=$key;
+                $key='AS '.$key;
+
+            }
+
+            foreach ($subArr as $value) { //Ищем в нормальном синтаксисе все поля имеют псевдонимы
+                $value=trim($value);
+                $vl=mb_strlen($value);
+                $kpl=(mb_strlen($key)+mb_stripos($value,$key));
+                if ( mb_stripos($value,$key ) && $vl==$kpl && $keyfound==false ) {
+                    //echo "key found in value:$value at pos:".mb_stripos($value,$key)." vl:$vl; kpl:$kpl <br>";
+                    $keyfound=true;
+                    $resultarr[trim($keyIndex)]=$value;
+                    break; //если нашли ключ выходим из проверки
+                }
+            }
+            //Если поле на найдено проверяем его без псевдонима.
+            if (!$keyfound) {
+                foreach ($subArr as $value) { //Ищем в нормальном синтаксисе все поля имеют псевдонимы
+                    $vl = mb_strlen($value);
+                    $noaskpl = (mb_strlen($noaskey) + mb_stripos($value, $noaskey));
+                    if (mb_stripos($value, $noaskey) && $vl == $noaskpl && $keyfound == false) {
+                        echo "noaskey found in value:$value at pos:" . mb_stripos($value, $noaskey) . " vl:$vl; kpl:$noaskpl <br>";
+                        $keyfound = true;
+                        $resultarr[trim($keyIndex)]=$value;
+                        break; //если нашли ключ выходим из проверки
+                    }
+                }
+            }
+        }
+
+    }
+    /*
+    echo "<pre>";
+    print_r($insertArr);
+    print_r($selectArr);
+    print_r($resultarr);
+    echo "</pre>";*/
+    return ['insertList'=>$insertArr,'selectList'=>$selectArr,'subList'=>$resultarr];
+
+
+
 }
-
-
-
-/*echo "<pre>";
-foreach ( $sql_tree['SQL']['INSERT']['INTO']['1|*INSERT']['INTO'] as $insFields ) {
-    print_r($insFields);
-    echo "<hr>";
-}
-echo "</pre>";*/

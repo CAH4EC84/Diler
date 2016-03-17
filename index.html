@@ -2,27 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="css/jquery-ui-1.11.4.custom/jquery-ui.css">
-    <link rel="stylesheet" href="css/ui.jqgrid.css">
-    <link rel="stylesheet" href="css/jqG.css">
-    <!--Мой CSS-->
-    <link rel="stylesheet" href="css/Algol.css">
-
+    <!--Jquery UI-->
     <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+    <link rel="stylesheet" href="css/jquery-ui-1.11.4.custom/jquery-ui.css">
+
+    <!--Плагин таблиц jqGrid-->
     <script type="text/javascript" src="js/i18n/grid.locale-ru.js"></script>
     <script type="text/javascript" src="js/jquery.jqGrid.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui.js"></script>
+    <link rel="stylesheet" href="css/ui.jqgrid.css">
+    <link rel="stylesheet" href="css/jqG.css">
+
+    <!--Плагин графиков jqplot-->
+    <script type="text/javascript" src="js/jquery.jqplot.js"></script>
+    <script type="text/javascript" src="js/jqplot/jqplot.dateAxisRenderer.js"></script>
+    <script type="text/javascript" src="js/jqplot/jqplot.logAxisRenderer.js"></script>
+    <script type="text/javascript" src="js/jqplot/jqplot.canvasTextRenderer.js"></script>
+    <script type="text/javascript" src="js/jqplot/jqplot.canvasAxisTickRenderer.js"></script>
+    <script type="text/javascript" src="js/jqplot/jqplot.highlighter.js"></script>
+    <script type="text/javascript" src="js/jqplot/jqplot.pointLabels.js"></script>
+
+    <link rel="stylesheet" href="css/jquery.jqplot.css">
+
+    <!--Мой CSS-->
+    <link rel="stylesheet" href="css/Algol.css">
     <!--Мой JS-->
     <script type="text/javascript" src="js/repa.js"></script>
 
     <title>МедСервис</title>
 </head>
 <body>
+<div id="loading"></div>
+
 <div id="tabs">
     <ul>
         <li><a href="#tabs-1">Подписки</a></li>
         <li><a href="#tabs-2">Фирмы</a></li>
         <li><a href="#tabs-3">Структура прайса</a></li>
+        <li><a href="#tabs-4">Графики</a></li>
     </ul>
     <div id="tabs-1">
         <table id="subsInfo"><tr><td></td></tr></table>
@@ -33,8 +50,49 @@
         <div id="pager2"></div>
     </div>
     <div id="tabs-3">
-        <p></p>
+            <input id="nodes_id" type="text" size="4">
+            <input id="doc_id" type="text" size="4">
+            <input type="button" value="request">
+        <div id="sqlStructureResult" >
+            SQL STRUCTURE
+        </div>
+    </div>
+    <div id ="tabs-4">
+        <p>
+
+        </p>
+        <div id="accordion">
+            <h3><a href="#">Пироги</a></h3>
+            <div id="pie" class="mychart"></div>
+            <h3><a href="#">Линии</a></h3>
+            <div id="lines">
+                <label for="chartlinesfrom">с:</label> <input type="text" id="chartlinesfrom" name="from" size="10"/>
+                <label for="chartlinesto">по:</label> <input type="text" id="chartlinesto" name="to" size="10"/>
+
+                <label for="range">Диапозон:</label>
+                <select name="range" id="range">
+                  <option>day</option>
+                  <option>month</option>
+                  <option>year</option>
+                </select>
+
+                <label for="client">от:</label>
+                <select name="client" id="client">
+                    <option>allClients</option>
+                </select>
+
+                <label for="diler">на:</label>
+                <select name="diler" id="diler">
+                    <option>AllDilers</option>
+                </select>
+                    <input type="button" value="request">
+                <div id="chartdivlines" class="mychart" ></div>
+            </div>
+        </div>
     </div>
 </div>
 </body>
 </html>
+
+
+
