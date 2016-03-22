@@ -58,36 +58,51 @@
         </div>
     </div>
     <div id ="tabs-4">
-        <p>
+        <div id="lines">
+            <label for="chartlinesfrom">с:</label>
+            <input type="text" id="chartlinesfrom" name="from" size="10"/>
+            <label for="chartlinesto">по:</label>
+            <input type="text" id="chartlinesto" name="to" size="10"/>
 
-        </p>
+            <label for="range">Диапозон:</label>
+            <select name="range" id="range">
+                <option>День</option>
+                <option>Месяц</option>
+                <option>Квартал</option>
+                <option>Год</option>
+            </select>
+
+            <label for="type">Тип:</label>
+            <select name="type" id="type">
+                <option>Заказ</option>
+                <option>Конкурс</option>
+                <option>Отказ</option>
+            </select>
+
+
+            <label for="level">Масшатаб:</label>
+            <select name="level" id="level">
+                <option>Все заказы</option>
+                <option>Регионы</option>
+                <option>Апт. Сети</option>
+                <option>Аптеки</option>
+            </select>
+
+            <label for="clients">от:</label>
+            <select name="clients" id="clients">
+                <option></option>
+            </select>
+
+            <input type="button" value="request">
+            <div id="chartdivlines" class="mychart" ></div>
+        </div>
+
+
         <div id="accordion">
             <h3><a href="#">Пироги</a></h3>
             <div id="pie" class="mychart"></div>
             <h3><a href="#">Линии</a></h3>
-            <div id="lines">
-                <label for="chartlinesfrom">с:</label> <input type="text" id="chartlinesfrom" name="from" size="10"/>
-                <label for="chartlinesto">по:</label> <input type="text" id="chartlinesto" name="to" size="10"/>
 
-                <label for="range">Диапозон:</label>
-                <select name="range" id="range">
-                  <option>day</option>
-                  <option>month</option>
-                  <option>year</option>
-                </select>
-
-                <label for="client">от:</label>
-                <select name="client" id="client">
-                    <option>allClients</option>
-                </select>
-
-                <label for="diler">на:</label>
-                <select name="diler" id="diler">
-                    <option>AllDilers</option>
-                </select>
-                    <input type="button" value="request">
-                <div id="chartdivlines" class="mychart" ></div>
-            </div>
         </div>
     </div>
 </div>

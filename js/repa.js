@@ -36,7 +36,7 @@ $(function () {
                 //Рисуем графики
                 else if (ui.newTab.index() == 3 & !initialized[3]) {
                     $("#chartlinesfrom, #chartlinesto").datepicker({dateFormat: "dd.mm.yy"}); //Добавляем календари сверху
-                    $("#accordion").accordion({ //Диаграмы прячем в аккордион
+                    $("#accordion").accordion({ //аккордион
                         collapsible: true,
                         active: false,
                         heightStyle: content,
@@ -113,7 +113,7 @@ $(function () {
                     add: false,
                     del: false,
                     edit: false,
-                    refresh: true,
+                    refresh: false,
                     search: true,
                     view: false,
                 },
@@ -275,6 +275,24 @@ $(function () {
                     .done (function (data) {
                     $("#loading").dialog("close");
                         //После ответа сервера рисуем график
+                    /*
+                     var x={"\u0412\u043e\u043b\u043e\u0433\u0434\u0430":{"32016":50215.76,"22016":60287.19,"12016":63766.19},"\u041a\u0430\u043b\u0438\u043d\u0438\u043d\u0433\u0440\u0430\u0434":{"32016":78766635.243,"12016":118898801.806,"22016":118841957.278},"\u041a\u0440\u0430\u0441\u043d\u043e\u0434\u0430\u0440\u0441\u043a\u0438\u0439 \u043a\u0440\u0430\u0439":{"22016":71899686.838,"12016":127951973.845,"32016":58851399.116},"\u041c\u043e\u0441\u043a\u0432\u0430":{"32016":43778657.91,"22016":61356736.67,"12016":85656635.75},"\u041c\u0443\u0440\u043c\u0430\u043d\u0441\u043a":{"22016":175732254.166,"12016":165999534.305,"32016":109492734.015},"\u041d\u043e\u0432\u0433\u043e\u0440\u043e\u0434":{"12016":47246905.89,"22016":41590937.083,"32016":28869438.479},"\u041f\u0435\u0442\u0440\u043e\u0437\u0430\u0432\u043e\u0434\u0441\u043a":{"12016":81937964.836,"32016":56295418.777,"22016":81714551.629},"\u041f\u0441\u043a\u043e\u0432":{"32016":31787553.182,"22016":44462348.398,"12016":47088726.154},"\u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0430 \u041a\u0430\u0440\u0435\u043b\u0438\u044f":{"22016":93360325.806,"32016":61072929.452,"12016":89275250.366},"\u0421.-\u041f\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433":{"32016":1201376239.236,"12016":1973955201.632,"22016":1635298500.47},"\u0421\u043c\u043e\u043b\u0435\u043d\u0441\u043a":{"22016":22467052.67,"12016":28040670.86,"32016":17816990.77},"\u0421\u0442\u0430\u0432\u0440\u043e\u043f\u043e\u043b\u044c\u0441\u043a\u0438\u0439 \u043a\u0440\u0430\u0439":{"32016":859738.33,"12016":1935928.72,"22016":1364922.134}};
+                     var y={"3.2016":50215.76,"2.2016":60287.19,"1.2016":63766.19};
+                     var header=[];
+                     var data = [];
+                     var line=[];
+                     var i = 0 ;
+                     $.each(y, function(index, value) {
+
+                     if (typeof(value)=='object') {
+                     header[i]=index
+                     $.each(value, function (d,s) {line.push([d,s])})
+                     data[i]=line;
+                     line=[];
+                     i++;
+                     } else {data.push([index, value])}
+                     });
+                     */
                         var line1 = [];
                         $.each(data, function(index, value) {
                             line1.push([index, value])
@@ -394,14 +412,17 @@ $(function () {
             };
 //Получаем список клиентов для детальных графиков
         function getClientsList () {
-            $.ajax ({
-                methode:'GET',
-                dataType:'json',
-                url:'php/clientList.php'
+            $("client").click (function (){
+                $.ajax ({
+                    methode:'GET',
+                    dataType:'json',
+                    url:'php/clientList.php'
+                })
+                    .done (function (data){
+                    console.log(data);
+                })
             })
-                .done (function (data){
-                console.log(data);
-            })
+
         }
 });
 
