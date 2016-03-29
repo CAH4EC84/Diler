@@ -97,9 +97,12 @@ $query = "SELECT *
            FROM firmsInfo".$qWhere."
         ) AS y
         WHERE y.x BETWEEN ".$start." AND ".($start+$limit)." ORDER BY y.x, $sidx $sord;";
+
+//echo $query ."<hr>";
 $result=sqlsrv_query($conn,$query,$params) or die( print_r( sqlsrv_errors(), true));
 
 // «аголовок с указанием содержимого.
+
 header("Content-type: text/xml;charset=utf-8");
 $s = "<?xml version='1.0' encoding='utf-8'?>";
 $s .=  "<rows>";
@@ -109,15 +112,17 @@ $s .= "<records>".$count."</records>";
 
 // ќб€зательно передайте текстовые данные в CDATA
 while($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
+//echo $row['NAME'].$row['parent'].$row['address1'].$row['region']."<br>";
+
     $s .= "<row>";
-    $s .= "<cell>". $row['nodes_id']."</cell>";
-    $s .= "<cell><![CDATA[". $row['name']."]]></cell>";
+    $s .= "<cell>". $row['NODES_ID']."</cell>";
+    $s .= "<cell><![CDATA[". $row['NAME']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['parent']."]]></cell>";
-    $s .= "<cell><![CDATA[". $row['address1']."]]></cell>";
+    $s .= "<cell><![CDATA[". $row['ADDRESS1']."]]></cell>";
     $s .= "<cell><![CDATA[". $row['region']."]]></cell>";
     $s .= "</row>";
+
 }
 $s .= "</rows>";
-
 echo $s;
 ?>

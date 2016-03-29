@@ -6,6 +6,7 @@
 
 
 $(function () {
+
 //Делаем табы
         //Открываем таблицы по мере обновления табов.
         var initialized = [false, false, false];
@@ -35,7 +36,13 @@ $(function () {
                 }
                 //Рисуем графики
                 else if (ui.newTab.index() == 3 & !initialized[3]) {
-                    $("#chartlinesfrom, #chartlinesto").datepicker({dateFormat: "dd.mm.yy"}); //Добавляем календари сверху
+                    $("#chartlinesfrom, #chartlinesto").datepicker({
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: "dd.mm.yy"}); //Добавляем календари сверху
+                    $("#chartlinesfrom").datepicker( "setDate", "01.01.2016" );
+                    $("#chartlinesto").datepicker( "setDate", new Date() );
+
                     $("#accordion").accordion({ //аккордион
                         collapsible: true,
                         active: false,
@@ -230,7 +237,7 @@ $(function () {
             });
         }
 
-//Функция получения текста запроса из xml файла
+//Функция получения текста запроса из xml файла (структура прайса)
         function getPriceStructure() {
             $('#tabs-3 input[type="button"]').click(function () {
                 $.get('php/accessQueries.php', {nodes_id: $("#nodes_id").val(), doc_id: $("#doc_id").val()},
@@ -242,8 +249,60 @@ $(function () {
             });
         }
 
-//Построение графиков
+//параметрамы отчетов и отчет.
+    //$("#report-accordion").accordion();
+    $("#range").selectmenu();
+    $("#type").selectmenu();
+    $("#level").selectmenu({
+        change:function (event,ui) { //При указании масштаба запрашиваем данные о подчиненных клиентах для детализации графика
+            $.ajax({
+                beforeSend: function() {
+                    $("#loading").dialog({
+                        modal: true,
+                        height: 50,
+                        width: 200,
+                        zIndex: 999,
+                        resizable: false,
+                        title: "Please wait loading..."
+                    })
+                    $("#loading").dialog("open");
+                },
+                methode:'GET',
+                async:false,
+                dataType:'json',
+                url:'php/clientList.php',
+                data:{ level:$('#level').val() }
+            })
+                .fail(function() {
+                    $("#loading").dialog("close");
+                    alert( "error try later" );
+                })
+                .done (function (data) {
+                if (data!=null) {
+                    $("#multiselect").find('option').remove()
 
+                    $("#loading").dialog("close");
+                    $.each(data, function (i, item) {
+                        $("#multiselect").append($('<option>', {
+                            value: i,
+                            text: item
+                        }))
+                    });
+                } else {
+                    $("#multiselect").find('option').remove()
+                    $("#loading").dialog("close");
+                };
+            });
+        }
+    });
+    $("#requestChart").button()
+    $("#chartlinesfrom").button()
+    $("#chartlinesto").button()
+
+//Создаем мультиселект
+    $('#multiselect').multiselect();
+
+//Построение графиков
         function drawGraphs() {
             $('#tabs-4 input[type="button"]').click(function () {
                 $.ajax({
@@ -265,7 +324,10 @@ $(function () {
                     data: {
                         from: $("#chartlinesfrom").val(),
                         to: $("#chartlinesto").val(),
-                        range: $("#range").val()
+                        type:$('#type').val(),
+                        range: $("#range").val(),
+                        level:$('#level').val(),
+                        ids:$('#multiselect_to').val()
                     }
                     })
                     .fail(function() {
@@ -275,155 +337,78 @@ $(function () {
                     .done (function (data) {
                     $("#loading").dialog("close");
                         //После ответа сервера рисуем график
-                    /*
-                     var x={"\u0412\u043e\u043b\u043e\u0433\u0434\u0430":{"32016":50215.76,"22016":60287.19,"12016":63766.19},"\u041a\u0430\u043b\u0438\u043d\u0438\u043d\u0433\u0440\u0430\u0434":{"32016":78766635.243,"12016":118898801.806,"22016":118841957.278},"\u041a\u0440\u0430\u0441\u043d\u043e\u0434\u0430\u0440\u0441\u043a\u0438\u0439 \u043a\u0440\u0430\u0439":{"22016":71899686.838,"12016":127951973.845,"32016":58851399.116},"\u041c\u043e\u0441\u043a\u0432\u0430":{"32016":43778657.91,"22016":61356736.67,"12016":85656635.75},"\u041c\u0443\u0440\u043c\u0430\u043d\u0441\u043a":{"22016":175732254.166,"12016":165999534.305,"32016":109492734.015},"\u041d\u043e\u0432\u0433\u043e\u0440\u043e\u0434":{"12016":47246905.89,"22016":41590937.083,"32016":28869438.479},"\u041f\u0435\u0442\u0440\u043e\u0437\u0430\u0432\u043e\u0434\u0441\u043a":{"12016":81937964.836,"32016":56295418.777,"22016":81714551.629},"\u041f\u0441\u043a\u043e\u0432":{"32016":31787553.182,"22016":44462348.398,"12016":47088726.154},"\u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0430 \u041a\u0430\u0440\u0435\u043b\u0438\u044f":{"22016":93360325.806,"32016":61072929.452,"12016":89275250.366},"\u0421.-\u041f\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433":{"32016":1201376239.236,"12016":1973955201.632,"22016":1635298500.47},"\u0421\u043c\u043e\u043b\u0435\u043d\u0441\u043a":{"22016":22467052.67,"12016":28040670.86,"32016":17816990.77},"\u0421\u0442\u0430\u0432\u0440\u043e\u043f\u043e\u043b\u044c\u0441\u043a\u0438\u0439 \u043a\u0440\u0430\u0439":{"32016":859738.33,"12016":1935928.72,"22016":1364922.134}};
-                     var y={"3.2016":50215.76,"2.2016":60287.19,"1.2016":63766.19};
-                     var header=[];
-                     var data = [];
-                     var line=[];
-                     var i = 0 ;
-                     $.each(y, function(index, value) {
-
-                     if (typeof(value)=='object') {
-                     header[i]=index
-                     $.each(value, function (d,s) {line.push([d,s])})
-                     data[i]=line;
-                     line=[];
-                     i++;
-                     } else {data.push([index, value])}
-                     });
-                     */
-                        var line1 = [];
-                        $.each(data, function(index, value) {
-                            line1.push([index, value])
-                        });
-                        //Данные по дням
-                        var day_conf={
-                            title:'Распределение по дням',
-                            legend: {
-                                show: true,
-                                placement: 'outside'
-                            },
-                            seriesDefaults: { //Плавные линии вместо ломаных
-                                rendererOptions: {
-                                    smooth: true
-                                }
-                            },
-                            axes:{ //Настройка осей
-                                xaxis:{
-                                    renderer:$.jqplot.DateAxisRenderer, //Поддержка дат
-                                    tickRenderer: $.jqplot.CanvasAxisTickRenderer, //Дополнительные опции для оси X
-                                    tickOptions:{
-                                        formatString:'%d.%m.%y', //Формат даты
-                                        angle:'-30' //угол наклона
-                                    },
-                                    tickInterval:'1 day', //частота отсечек на оси x
-                                    max:$("#chartlinesto").val()
-                                },
-                                yaxis:{
-                                    //min:0,
-                                    tickOptions:{formatString:"%'d"} //разделение разрядов
-                                }
-                            },
-                            series:[
-                                {
-                                    lineWidth:4,
-                                    markerOptions:{style:'square'},
-                                    pointLabels: {show: true}, //отображения значений на метках графика
-                                }
-                            ],
-                        };
-                        //Данные по месяцам
-                        var month_conf={
-                            title:'Распределение по месяцам',
-                            legend: {
-                                show: true,
-                                placement: 'outside'
-                            },
-                            seriesDefaults: { //Плавные линии вместо ломаных
-                                rendererOptions: {
-                                    smooth: true
-                                }
-                            },
-                            axes:{ //Настройка осей
-                                xaxis:{
-                                    tickRenderer: $.jqplot.CanvasAxisTickRenderer, //Дополнительные опции для оси X
-                                    tickOptions:{angle:'-30'}, //угол наклона
-                                    min:0,
-                                    max:13,
-                                    tickInterval:1, //частота отсечек на оси x
-                                },
-                                yaxis:{
-                                  //  min:0,
-                                    tickOptions:{formatString:"%'d"} //разделение разрядов
-                                }
-                            },
-                            series:[
-                                {
-                                    lineWidth:4,
-                                    markerOptions:{style:'square'},
-                                    pointLabels: {show: true}, //отображения значений на метках графика
-                                }
-                            ]
-                        };
-                        //Данные по годам
-                        var year_conf={
-                            title:'Распределение по годам',
-                            seriesDefaults: { //Плавные линии вместо ломаных
-                                rendererOptions: {
-                                    smooth: true
-                                }
-                            },
-                            axes:{ //Настройка осей
-                                xaxis:{
-                                    tickRenderer: $.jqplot.CanvasAxisTickRenderer, //Дополнительные опции для оси X
-                                    tickOptions:{angle:'-30'}, //угол наклона
-                                    min:2014,
-                                    max:2020,
-                                    tickInterval:1, //частота отсечек на оси x
-                                },
-                                yaxis:{
-                                  //  min:0,
-                                    tickOptions:{formatString:"%'d"} //разделение разрядов
-                                }
-                            },
-                            series:[
-                                {
-                                    lineWidth:4,
-                                    markerOptions:{style:'square'},
-                                    pointLabels: {show: true}, //отображения значений на метках графика
-                                }
-                            ]
-                        };
-                        switch ($("#range").val()) {
-                            case 'day':
-                                plot_conf=day_conf;
-                                break
-                            case 'month':
-                                plot_conf=month_conf;
-                                break
-                            case 'year':
-                                plot_conf=year_conf;
-                                break;
+                    var header=[];
+                    var dataP = [];
+                    var line=[];
+                    var i =0;
+                    $.each(data, function(index, value) {
+                        if (typeof(value)=='object') { //Если указан масштаб данных
+                            header[i]=index //Заголовок для легенды
+                            $.each(value, function (d,s) {
+                                line.push( {x:new Date(d),y:s} )
+                            })
+                            dataP[i]=line; //Данные для построения графика
+                            line=[];
+                            i++;
+                        } else { //Если выборка без деления по клиентам
+                            header[0]='Общая сумма закупок'
+                            dataP.push( {x:new Date(index), y:value} )
                         }
-                        var plot1 = $.jqplot('chartdivlines', [line1], plot_conf).replot();
-                    })
-                })
-            };
-//Получаем список клиентов для детальных графиков
-        function getClientsList () {
-            $("client").click (function (){
-                $.ajax ({
-                    methode:'GET',
-                    dataType:'json',
-                    url:'php/clientList.php'
-                })
-                    .done (function (data){
-                    console.log(data);
-                })
-            })
+                    });
+                //Настраиваем отрисовку графика
+                    var chart = new CanvasJS.Chart("chartdivlines"); //Создаем объект принимающий график
+                    chart.options.title = { text: "" }; //Заголовок
+                    chart.options.legend= { //Легенда
+                        fontSize: 12,
+                        fontFamily: "comic sans ms",
+                        fontColor: "Sienna",
+                        maxWidth: 1500,
+                        dockInsidePlotArea: false,
+                        horizontalAlign: "left", // left, center ,right
+                        verticalAlign: "bottom",  // top, center, bottom
+                        itemTextFormatter: function (e) { // Текст легенды  - фирма + сумма за период
+                            totalSumm=0;
+                            for (var i=0; i<e.dataSeries.dataPoints.length; i++) {
+                                totalSumm+= e.dataSeries.dataPoints[i].y
+                            }
+                            return e.dataSeries.name+" : "+(totalSumm.toString().replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 '));
+                        }
+                    };
+                    //опции осей
+                    chart.options.axisX = {
+                        valueFormatString: "MMM",
+                        gridThickness: 2,
+                        labelAngle: -30,
+                        labelFontSize: 14
+                    };
+                    chart.options.axisY = {
+                        valueFormatString: "0млн,,.",
+                        labelFontSize: 14
+                    };
 
-        }
+                    //Заполняем данные о графике
+                    chart.options.data = [];
+                    for (i=0; i<header.length; i++) {
+
+                        var series = {//Данные о типе графика
+                            type: "line", //Тип графа
+                            name: header[i], //Заголовок
+                            showInLegend: true, //отображение легенды
+                            xValueType: "dateTime",
+                        };
+                        if (header[i]=='Общая сумма закупок') {
+                            series.dataPoints= dataP //точки графика
+                            chart.options.data.push(series);
+                        } else {
+                            series.dataPoints = dataP[i]  //точки графика
+                            chart.options.data.push(series);
+                        }
+                    };
+                    chart.render();//отрисовываем график
+
+                });
+                });
+            };
 });
 
 

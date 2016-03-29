@@ -16,160 +16,123 @@ $type=$_GET['type'];
 $range=$_GET['range'];
 $level=$_GET['level'];
 
-//print_r($_GET);
 $params = array();
 $params[] = $fromDate;
 $params[] = $toDate;
-echo "<pre>";
-print_r($_GET);
-print_r($params);
 
 // Подключаемся к MSSQL
 $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 
-//формируем имя запрашиваемой таблицы
-switch ($type) {
-    case 'zakaz':
-        $qFrom='Заказы_клиентов_';
-        break;
-    case 'otkaz':
-        $qFrom='Отказы_клиентов_';
-        break;
-    case 'tender':
-        $qFrom='Конкурсы_клиентов_';
-        break;
-}
+$query=$subQuery=$qSelect=$qJoin=$qGroup=$qOrder=$idsFilter='';
 
-//Определяем диапозон
-switch($range) {
-    case 'day':
-        $qFrom.='День';
-        break;
-    case 'month':
-        $qFrom.='Месяц';
-        $qWhere=" where Дата between ( Cast(month((?)) as nvarchar)+'.'+ Cast(YEAR((?))as nvarchar) ) and ( Cast(month((?)) as nvarchar)+'.'+ Cast(YEAR((?))as nvarchar) )";
-
-        //Надо 4 раза передать 2 параметра...
-        $tmpparam=$params;
-        $params[1]=$tmpparam[0];
-        $params[2]=$tmpparam[1];
-        $params[3]=$tmpparam[1];
-        break;
-    case 'quater':
-        $qFrom.='Квартал';
-        $qWhere=" where Дата between datepart( qq ,CONVERT(char(10),(?),104)) and datepart( qq ,CONVERT(char(10),(?),104))";
-        break;
-    case 'year':
-        $qFrom.='Год';
-        $qWhere=" where Дата between Cast(year((?)) as nvarchar)  and Cast(year((?)) as nvarchar)";
-        break;
-    default:
-        throw new Exception('error rules range filter!');
-};
-
-//Определяем уровень данных
 switch ($level)  {
-    case 'all':
-        $qSelect="Select ".$qFrom.".Сумма as SUM,".$qFrom.".Дата as Date";
-        $qorder=" order by Дата";
+    case 'Все заказы':
+        $idsFilter='';
         break;
-    case 'region':
-        $qFrom.='_Регион';
-        $qJoin=' Left Join medline39.dbo.REGIONS on '.$qFrom.'.ИдРегиона=medline39.dbo.REGIONS.ID';
-        $qSelect="Select ".$qFrom.".Сумма as SUM,".$qFrom.".Дата as Date, medline39.dbo.REGIONS.NAME ";
-        $qorder=" order by NAME";
+    case 'Регионы':
+        if (isset($_GET['ids']) || $_GET['ids']!='') {
+            foreach ($_GET['ids'] as $value) {
+                $ids.= "ИдРегиона=".$value. "OR ";
+            }
+            if ($ids) {$idsFilter=" and (".mb_substr($ids,0,-3)." )";} else {$idsFilter='';}
+        }
         break;
-    case 'network':
-        $qFrom.='_АптСеть';
-        $qJoin=' Left Join medline39.dbo.FIRMS on '.$qFrom.'.ИдАптечнойСети=medline39.dbo.Firms.ID';
-        $qSelect="Select ".$qFrom.".Сумма as SUM,".$qFrom.".Дата as Date, medline39.dbo.FIRMS.NAME ";
-        $qorder=" order by NAME";
+    case 'Апт. Сети':
+        if (isset($_GET['ids']) || $_GET['ids']!='') {
+            foreach ($_GET['ids'] as $value) {
+                $ids.= "ИдАптечнойСети=".$value. "OR ";
+            }
+            if ($ids) {$idsFilter=" and (".mb_substr($ids,0,-3)." )";} else {$idsFilter='';}
+        }
         break;
-    case 'client':
-        $qFrom.='_Аптеки';
-        $qJoin=' Left Join medline39.dbo.FIRMS on '.$qFrom.'.ИдАптечнойСети=medline39.dbo.Firms.ID';
-        $qSelect="Select ".$qFrom.".Сумма as SUM,".$qFrom.".Дата as Date, medline39.dbo.FIRMS.NAME ";
-        $qorder=" order by NAME";
+    case 'Аптеки':
+        if (isset($_GET['ids']) || $_GET['ids']!='') {
+            foreach ($_GET['ids'] as $value) {
+                $ids.= "ИдАптеки=".$value. "OR ";
+            }
+            if ($ids) {$idsFilter=" and (".mb_substr($ids,0,-3)." )";} else {$idsFilter='';}
+        }
         break;
     default:
         throw new Exception('error rules level filter!)');
 };
 
-$query=$qSelect.' FROM '.$qFrom.$qJoin.$qWhere.$qorder;
-echo $query ."<hr>";
-$result=sqlsrv_query($conn,$query,$params) or die( print_r( sqlsrv_errors(), true));
-
-$tmp=array();
-while($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
-    echo $row['SUM'].$row['Date'].$row['NAME']."<hr>";
-    $tmp[$row['NAME']][$row['Date']]=round($row['SUM'],3);
-
+//Формируем подзапрос для выборки указанного типа данных
+switch ($type) {
+    case 'Заказ':
+       $subQuery = " from (Select DISTINCT Дата as DATA ,НомерЗаказа,Сумма,ИдРегиона,ИдАптечнойСети,ИдАптеки from FullData
+	                where Дата between (?) and (?) and ИдТипаДокумента=8 ".$idsFilter.") as tmp ";
+        break;
+    case 'Отказ':
+        break;
+    case 'Конкурс':
+        break;
 }
 
-$data=json_encode($tmp);
-echo $data;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-switch ($range) {
-    case 'day':
-        $query='
-SELECT DISTINCT
-  TOP (100) PERCENT CONVERT(varchar(12), CONVERT(varchar(12), medline39.dbo.SKL_DOCUMENTS.CREATEDATE, 104)) AS x,
-  round(sum(medline39.dbo.SKL_DOCUMENTS.ALLSUMM),2) AS y
-FROM         medline39.dbo.SKL_DOCUMENTS
-WHERE     (medline39.dbo.SKL_DOCUMENTS.TYPE = 8) AND (medline39.dbo.SKL_DOCUMENTS.CREATEDATE) >(?) and (medline39.dbo.SKL_DOCUMENTS.CREATEDATE) <(?)
-group by CONVERT(varchar(12), CONVERT(varchar(12), medline39.dbo.SKL_DOCUMENTS.CREATEDATE, 104))
-order by x';
+//Определяем диапозон
+switch($range) {
+    case 'День':
+        $qSelect='Select DATA,';
+        $qGroup=' group by DATA';
         break;
-    case 'month':
-        $query='
-SELECT DISTINCT
-  TOP (100) PERCENT MONTH( CONVERT(varchar(12), CONVERT(varchar(12), medline39.dbo.SKL_DOCUMENTS.CREATEDATE, 104)) ) AS x,
-  round(sum(medline39.dbo.SKL_DOCUMENTS.ALLSUMM),2) AS y
-FROM         medline39.dbo.SKL_DOCUMENTS
-WHERE     (medline39.dbo.SKL_DOCUMENTS.TYPE = 8) AND (medline39.dbo.SKL_DOCUMENTS.CREATEDATE) >(?) and (medline39.dbo.SKL_DOCUMENTS.CREATEDATE) <(?)
-group by MONTH( CONVERT(varchar(12), CONVERT(varchar(12), medline39.dbo.SKL_DOCUMENTS.CREATEDATE, 104)) )
-order by x';
+    case 'Месяц':
+        $qSelect="Select ( Cast(YEAR(DATA)as nvarchar) + '-' + RIGHT('0' + RTRIM(MONTH(DATA)), 2) )as DATA,";
+        $qGroup=" group by ( Cast(YEAR(DATA)as nvarchar) + '-' + RIGHT('0' + RTRIM(MONTH(DATA)), 2) )";
         break;
-    case 'year':
-        $query='
-SELECT DISTINCT
-  TOP (100) PERCENT YEAR( CONVERT(varchar(12), CONVERT(varchar(12), medline39.dbo.SKL_DOCUMENTS.CREATEDATE, 104)) ) AS x,
-  round(sum(medline39.dbo.SKL_DOCUMENTS.ALLSUMM),2) AS y
-FROM         medline39.dbo.SKL_DOCUMENTS
-WHERE     (medline39.dbo.SKL_DOCUMENTS.TYPE = 8) AND (medline39.dbo.SKL_DOCUMENTS.CREATEDATE) >(?) and (medline39.dbo.SKL_DOCUMENTS.CREATEDATE) <(?)
-group by YEAR( CONVERT(varchar(12), CONVERT(varchar(12), medline39.dbo.SKL_DOCUMENTS.CREATEDATE, 104)) )
-order by x';
+    case 'Год':
+        $qSelect.='Select ( Cast(YEAR(DATA)as nvarchar) )as DATA,';
+        $qGroup=' group by ( Cast(YEAR(DATA)as nvarchar) )';
         break;
     default:
-        throw new Exception('error rules filter!!! :)');
-}
+        throw new Exception('error rules range filter!');
+};
 
+//Определяем уровень детализации данных
 
+switch ($level)  {
+    case 'Все заказы':
+        $qOrder=" order by DATA";
+        break;
+    case 'Регионы':
+        $qSelect.='R.NAME as NAME,';
+        $qJoin='Left Join medline39.dbo.REGIONS as R on R.ID=ИдРегиона';
+        $qGroup.=',NAME';
+        $qOrder=' order by NAME,DATA';
+        break;
+    case 'Апт. Сети':
+        $qSelect.='F.NAME as NAME,';
+        $qJoin='Left Join medline39.dbo.FIRMS as F on F.ID=ИдАптечнойСети';
+        $qGroup.=',NAME';
+        $qOrder=' order by NAME,DATA';
+        break;
+    case 'Аптеки':
+        $qSelect.='F.NAME as NAME,';
+        $qJoin='Left Join medline39.dbo.FIRMS as F on F.ID=ИдАптеки	';
+        $qGroup.=',NAME';
+        $qOrder=' order by NAME,DATA';
+        break;
+    default:
+        throw new Exception('error rules level filter!)');
+};
 
-//x - укороченная дата y - сумма заказов
+$query=$qSelect.'SUM(Сумма) as Summ '.$subQuery.$qJoin.$qGroup.$qOrder;
+
+//echo $query ."<hr>";
 
 $result=sqlsrv_query($conn,$query,$params) or die( print_r( sqlsrv_errors(), true));
+
 $tmp=array();
 while($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
-    $tmp[$row['x']]=round($row['y'],3);
+    if ($row['NAME']) {
+        $tmp[$row['NAME']][$row['DATA']] = round($row['Summ'],0);
+    } else {
+        $tmp[$row['DATA']]=round($row['Summ'],0);
+    }
 
 }
+
 $data=json_encode($tmp);
 echo $data;
-*/
+
 ?>
