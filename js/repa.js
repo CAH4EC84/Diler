@@ -36,12 +36,12 @@ $(function () {
                 }
                 //Рисуем графики
                 else if (ui.newTab.index() == 3 & !initialized[3]) {
-                    $("#chartlinesfrom, #chartlinesto").datepicker({
+                    $("#chartlinesfrom, #chartlinesto , #chartpiefrom, #chartpieto").datepicker({
                         changeMonth: true,
                         changeYear: true,
-                        dateFormat: "dd.mm.yy"}); //Добавляем календари сверху
-                    $("#chartlinesfrom").datepicker( "setDate", "01.01.2016" );
-                    $("#chartlinesto").datepicker( "setDate", new Date() );
+                        dateFormat: "dd.mm.yy"});
+                    $("#chartlinesfrom, #chartpiefrom ").datepicker( "setDate", "01.01.2016" );
+                    $("#chartlinesto, #chartpieto").datepicker( "setDate", new Date() );
 
                     $("#accordion").accordion({ //аккордион
                         collapsible: true,
@@ -250,11 +250,29 @@ $(function () {
         }
 
 //параметрамы отчетов и отчет.
-    //$("#report-accordion").accordion();
+    $("#report-accordion").accordion({ active: false, collapsible: true, heightStyle: "content" });
+
+    //Кнопки и селекты для отчетов
     $("#range").selectmenu();
+    $("#pierange").selectmenu();
     $("#type").selectmenu();
+    $("#pietype").selectmenu();
+    $("#pielevel").selectmenu();
+    $("#requestChart").button()
+    $("#requestChartProduction").button()
+    $("#chartlinesfrom").button()
+    $("#chartpiefrom").button()
+    $("#chartlinesto").button()
+    $("#chartpieto").button()
+    $("#summFilter").button();
+//Создаем мультиселект
+    $('#multiselect').multiselect();
+
+
+
     $("#level").selectmenu({
         change:function (event,ui) { //При указании масштаба запрашиваем данные о подчиненных клиентах для детализации графика
+            $("#multiselect_to").find('option').remove()
             $.ajax({
                 beforeSend: function() {
                     $("#loading").dialog({
@@ -280,12 +298,11 @@ $(function () {
                 .done (function (data) {
                 if (data!=null) {
                     $("#multiselect").find('option').remove()
-
                     $("#loading").dialog("close");
                     $.each(data, function (i, item) {
                         $("#multiselect").append($('<option>', {
-                            value: i,
-                            text: item
+                            value: item,
+                            text: i
                         }))
                     });
                 } else {
@@ -295,16 +312,11 @@ $(function () {
             });
         }
     });
-    $("#requestChart").button()
-    $("#chartlinesfrom").button()
-    $("#chartlinesto").button()
-
-//Создаем мультиселект
-    $('#multiselect').multiselect();
+    $("#level").val('Все заказы').selectmenu('refresh')
 
 //Построение графиков
         function drawGraphs() {
-            $('#tabs-4 input[type="button"]').click(function () {
+            $("#requestChart").click(function () {
                 $.ajax({
                     beforeSend: function() {
                         $("#loading").dialog({
@@ -320,23 +332,23 @@ $(function () {
                     methode:'GET',
                     async:false,
                     dataType:'json',
-                    url: 'php/jqplot-data.php',
+                    url: 'php/lineChart.php',
                     data: {
                         from: $("#chartlinesfrom").val(),
                         to: $("#chartlinesto").val(),
                         type:$('#type').val(),
                         range: $("#range").val(),
                         level:$('#level').val(),
-                        ids:$('#multiselect_to').val()
+                        ids:$('#multiselect_to').val(),
+                        summFilter:$('#summFilter').val()
                     }
                     })
                     .fail(function() {
                         $("#loading").dialog("close");
                         alert( "error try later" );
                     })
-                    .done (function (data) {
+                    .done (function (data) {//После ответа сервера рисуем график
                     $("#loading").dialog("close");
-                        //После ответа сервера рисуем график
                     var header=[];
                     var dataP = [];
                     var line=[];
@@ -351,39 +363,77 @@ $(function () {
                             line=[];
                             i++;
                         } else { //Если выборка без деления по клиентам
-                            header[0]='Общая сумма закупок'
+                            header[0]='Общая сумма:'
                             dataP.push( {x:new Date(index), y:value} )
                         }
                     });
-                //Настраиваем отрисовку графика
+                    //Формируем объект опций для оси X
+                    var mindate=$("#chartlinesfrom").datepicker( "getDate");
+                    var maxdate=$("#chartlinesto").datepicker( "getDate");
+                    var axisXOption = {
+                        labelAngle: -50,
+                        gridThickness: 1,
+                        labelFontSize: 14
+                    };
+                    //Диапозон определяет форматирование строки и интервал данных.
+                    switch ( $("#range").val()) {
+                        case 'День':
+                            mindate.setDate(mindate.getDate() - 1);
+                            maxdate.setDate(maxdate.getDate() +1 );
+                            axisXOption.minimum=mindate;
+                            //axisXOption.maximum=maxdate;
+                            axisXOption.interval=1;
+                            axisXOption.intervalType='day';
+                            axisXOption.formatString='DD.MM.YY';
+                            break;
+                        case 'Месяц':
+                            mindate.setMonth(mindate.getMonth() -1 )
+                            maxdate.setMonth(maxdate.getMonth() +1 )
+                            axisXOption.minimum=mindate;
+                            //axisXOption.maximum=maxdate;
+                            axisXOption.interval=1;
+                            axisXOption.intervalType='month';
+                            axisXOption.formatString='MMM.YY';
+                            break;
+                        case 'Год':
+                            mindate.setFullYear(mindate.getFullYear() -1 )
+                            maxdate.setFullYear(maxdate.getFullYear() +1 )
+                            //axisXOption.minimum=mindate;
+                            //axisXOption.maximum=maxdate;
+                            axisXOption.interval=1;
+                            axisXOption.intervalType='year';
+                            axisXOption.formatString='YYYY';
+                            break;
+                        default:
+                            break;
+                    }
+
+
+
+                    //Настраиваем отрисовку графика
                     var chart = new CanvasJS.Chart("chartdivlines"); //Создаем объект принимающий график
                     chart.options.title = { text: "" }; //Заголовок
+                    chart.options.exportEnabled=true //Сохранение JPEG
+                    //опции осей
+                    chart.options.axisX = axisXOption;
+                    chart.options.axisY = {
+                        valueFormatString: "#,###",
+                        labelFontSize: 14
+                    };
                     chart.options.legend= { //Легенда
                         fontSize: 12,
                         fontFamily: "comic sans ms",
                         fontColor: "Sienna",
-                        maxWidth: 1500,
-                        dockInsidePlotArea: false,
                         horizontalAlign: "left", // left, center ,right
-                        verticalAlign: "bottom",  // top, center, bottom
-                        itemTextFormatter: function (e) { // Текст легенды  - фирма + сумма за период
+                        verticalAlign: "center",  // top, center, bottom
+                        // Текст легенды  - фирма + сумма за период
+                        itemTextFormatter: function (e) {
                             totalSumm=0;
                             for (var i=0; i<e.dataSeries.dataPoints.length; i++) {
                                 totalSumm+= e.dataSeries.dataPoints[i].y
                             }
-                            return e.dataSeries.name+" : "+(totalSumm.toString().replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 '));
+                            return e.dataSeries.name+":"+(totalSumm.toString().replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 '));
                         }
-                    };
-                    //опции осей
-                    chart.options.axisX = {
-                        valueFormatString: "MMM",
-                        gridThickness: 2,
-                        labelAngle: -30,
-                        labelFontSize: 14
-                    };
-                    chart.options.axisY = {
-                        valueFormatString: "0млн,,.",
-                        labelFontSize: 14
                     };
 
                     //Заполняем данные о графике
@@ -395,8 +445,10 @@ $(function () {
                             name: header[i], //Заголовок
                             showInLegend: true, //отображение легенды
                             xValueType: "dateTime",
+                            toolTipContent: "{label}{name}, <strong>{x} <br> {y}</strong>"
+
                         };
-                        if (header[i]=='Общая сумма закупок') {
+                        if (header[i]=='Общая сумма:') {
                             series.dataPoints= dataP //точки графика
                             chart.options.data.push(series);
                         } else {

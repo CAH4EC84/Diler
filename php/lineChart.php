@@ -15,16 +15,18 @@ $toDate=$_GET['to'];
 $type=$_GET['type'];
 $range=$_GET['range'];
 $level=$_GET['level'];
+$summFilter=$_GET['summFilter'];
 
 $params = array();
 $params[] = $fromDate;
 $params[] = $toDate;
 
+
 // Подключаемся к MSSQL
 $mssqlConn=sqlsrv_connect($serverName,$connectionInfo);
 if( $mssqlConn === false ) die( print_r( sqlsrv_errors(), true));
 
-$query=$subQuery=$qSelect=$qJoin=$qGroup=$qOrder=$idsFilter='';
+$query=$subQuery=$qSelect=$qHaving=$qJoin=$qGroup=$qOrder=$idsFilter='';
 
 switch ($level)  {
     case 'Все заказы':
@@ -54,6 +56,14 @@ switch ($level)  {
             if ($ids) {$idsFilter=" and (".mb_substr($ids,0,-3)." )";} else {$idsFilter='';}
         }
         break;
+    case 'Поставщики':
+        if (isset($_GET['ids']) || $_GET['ids']!='') {
+            foreach ($_GET['ids'] as $value) {
+                $ids.= "ИдПоставщика=".$value. "OR ";
+            }
+            if ($ids) {$idsFilter=" and (".mb_substr($ids,0,-3)." )";} else {$idsFilter='';}
+        }
+        break;
     default:
         throw new Exception('error rules level filter!)');
 };
@@ -61,12 +71,19 @@ switch ($level)  {
 //Формируем подзапрос для выборки указанного типа данных
 switch ($type) {
     case 'Заказ':
-       $subQuery = " from (Select DISTINCT Дата as DATA ,НомерЗаказа,Сумма,ИдРегиона,ИдАптечнойСети,ИдАптеки from FullData
-	                where Дата between (?) and (?) and ИдТипаДокумента=8 ".$idsFilter.") as tmp ";
+       $subQuery = " from (Select DISTINCT Дата as DATA ,НомерЗаказа,Сумма,ИдРегиона,ИдАптечнойСети,ИдАптеки,ИдПоставщика
+        from FullData
+	    where Дата between (?) and (?) and ИдТипаДокумента=8 ".$idsFilter.") as tmp ";
         break;
     case 'Отказ':
+        $subQuery = " from (Select DISTINCT Дата as DATA ,НомерЗаказа,Сумма,ИдРегиона,ИдАптечнойСети,ИдАптеки,ИдПоставщика
+         from FullData
+	     where Дата between (?) and (?) and ИдТипаДокумента=10 ".$idsFilter.") as tmp ";
         break;
     case 'Конкурс':
+        $subQuery = " from (Select DISTINCT Дата as DATA ,НомерЗаказа,Сумма,ИдРегиона,ИдАптечнойСети,ИдАптеки,ИдПоставщика
+        from FullData
+	    where Дата between (?) and (?) and ИдТипаДокумента=12 ".$idsFilter.") as tmp ";
         break;
 }
 
@@ -112,11 +129,21 @@ switch ($level)  {
         $qGroup.=',NAME';
         $qOrder=' order by NAME,DATA';
         break;
+    case 'Поставщики':
+        $qSelect.='F.NAME as NAME,';
+        $qJoin='Left Join medline39.dbo.FIRMS as F on F.ID=ИдПоставщика	';
+        $qGroup.=',NAME';
+        $qOrder=' order by NAME,DATA';
+        break;
     default:
         throw new Exception('error rules level filter!)');
 };
+if ($summFilter) {
+    $summFilter=str_replace(',','',$summFilter);
+    $qHaving=" having SUM(Сумма) $summFilter ";
+}
 
-$query=$qSelect.'SUM(Сумма) as Summ '.$subQuery.$qJoin.$qGroup.$qOrder;
+$query=$qSelect.'SUM(Сумма) as Summ '.$subQuery.$qJoin.$qGroup.$qHaving.$qOrder;
 
 //echo $query ."<hr>";
 

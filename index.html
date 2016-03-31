@@ -56,12 +56,11 @@
     </div>
     <div id ="tabs-4">
         <div id="report-accordion">
-            <h3><a href="#">Параметры отчета</a></h3>
+            <h3><a href="#">Документы </a></h3>
             <div>
-
                 <div id="chartOptions">
                     <input id="chartlinesfrom"> по <input id="chartlinesto">
-                <br>
+                    <br>
                     <select name="range" id="range">
                         <option>День</option>
                         <option>Месяц</option>
@@ -70,14 +69,16 @@
                     <select name="type" id="type">
                         <option>Заказ</option>
                         <option>Конкурс</option>
-                        <option>Отказ</option>
                     </select>
                     <select name="level" id="level">
                         <option>Все заказы</option>
                         <option>Регионы</option>
                         <option>Апт. Сети</option>
                         <option>Аптеки</option>
+                        <option>Поставщики</option>
                     </select>
+                    <br>
+                    <input id="summFilter" type="text" placeholder="Фильтр суммы">
                 </div>
                 <div id="divMultiSelect">
                     <div class="row-fluid">
@@ -96,11 +97,35 @@
                         </div>
                     </div>
                 </div>
-                <input type="button" value="request" id="requestChart">
+                <input type="button" value="Запрос" id="requestChart">
+                <div id="completeChart">
+                    <div id="chartdivlines" class="mychart" style="height: 500px; width: 100%;" ></div>
+                </div>
             </div>
-                <h3><a href="#">Отчет</a></h3>
-            <div id="completeChart">
-                <div id="chartdivlines" class="mychart" style="height: 600px; width: 100%;" ></div>
+            <h3><a href="#">Позиции</a></h3>
+            <div>
+                <input id="chartpiefrom"> по <input id="chartpieto">
+                <br>
+                <select name="pierange" id="pierange">
+                    <option>День</option>
+                    <option>Месяц</option>
+                    <option>Год</option>
+                </select>
+                <select name="pietype" id="pietype">
+                    <option>Заказ</option>
+                    <option>Конкурс</option>
+                </select>
+                <select name="pielevel" id="pielevel">
+                    <option>Все заказы</option>
+                    <option>Регионы</option>
+                    <option>Апт. Сети</option>
+                    <option>Аптеки</option>
+                    <option>Поставщики</option>
+                </select>
+                <br>
+                <input id="piesummFilter" type="text" placeholder="Фильтр суммы">
+                <br>
+                <input type="button" value="Препараты" id="requestChartProduction">
             </div>
         </div>
     </div>
