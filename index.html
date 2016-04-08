@@ -37,6 +37,7 @@
         <li><a href="#tabs-2">Фирмы</a></li>
         <li><a href="#tabs-3">Структура прайса</a></li>
         <li><a href="#tabs-4">Графики</a></li>
+        <li><a href="#tabs-5">EXCEL</a></li>
     </ul>
     <div id="tabs-1">
         <table id="subsInfo"><tr><td></td></tr></table>
@@ -58,7 +59,7 @@
         <div id="report-accordion">
             <h3><a href="#">Документы </a></h3>
             <div>
-                <div id="chartOptions">
+                <div class="chartOptions">
                     <input id="chartlinesfrom"> по <input id="chartlinesto">
                     <br>
                     <select name="range" id="range">
@@ -104,30 +105,35 @@
             </div>
             <h3><a href="#">Позиции</a></h3>
             <div>
-                <input id="chartpiefrom"> по <input id="chartpieto">
-                <br>
-                <select name="pierange" id="pierange">
-                    <option>День</option>
-                    <option>Месяц</option>
-                    <option>Год</option>
-                </select>
-                <select name="pietype" id="pietype">
-                    <option>Заказ</option>
-                    <option>Конкурс</option>
-                </select>
-                <select name="pielevel" id="pielevel">
-                    <option>Все заказы</option>
-                    <option>Регионы</option>
-                    <option>Апт. Сети</option>
-                    <option>Аптеки</option>
-                    <option>Поставщики</option>
-                </select>
-                <br>
-                <input id="piesummFilter" type="text" placeholder="Фильтр суммы">
-                <br>
-                <input type="button" value="Препараты" id="requestChartProduction">
+                <div class="chartOptions">
+                    <input id="chartpiefrom"> по <input id="chartpieto">
+                    <br>
+                    <select name="pietype" id="pietype">
+                        <option>Топ препаратов</option>
+                        <option>Топ продавцов</option>
+                    </select>
+                    <select name="piegroup" id="piegroup">
+                        <option>Продукция</option>
+                        <option>Продукция + Производитель</option>
+                    </select>
+                    <select name="pierange" id="pierange">
+                        <option>Сумма</option>
+                        <option>Количество</option>
+                        <option>Обращаемость</option>
+                    </select>
+                    <br>
+                    <input id="piesummFilter" type="text" placeholder="Фильтр суммы">
+                    <input id="pieProductFilter" type="text" placeholder="Фильтр препарат">
+                    <input id="pieProducerFilter" type="text" placeholder="Фильтр производителя">
+                    <br>
+                    <input type="button" value="Запрос" id="requesPeiChart">
+                    <div id="chartdivpie" class="mychart" style="height: 500px; width: 100%;" ></div>
+                </div>
             </div>
         </div>
+    </div>
+    <div id="tabs-5">
+        <a href="http://medserv.medline.spb.ru/diler/php/MakeExcel.php">Формировать отчет</a>
     </div>
 </div>
 </body>

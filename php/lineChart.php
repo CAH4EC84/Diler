@@ -98,7 +98,7 @@ switch($range) {
         $qGroup=" group by ( Cast(YEAR(DATA)as nvarchar) + '-' + RIGHT('0' + RTRIM(MONTH(DATA)), 2) )";
         break;
     case 'Год':
-        $qSelect.='Select ( Cast(YEAR(DATA)as nvarchar) )as DATA,';
+        $qSelect='Select ( Cast(YEAR(DATA)as nvarchar) )as DATA,';
         $qGroup=' group by ( Cast(YEAR(DATA)as nvarchar) )';
         break;
     default:

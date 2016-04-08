@@ -51,7 +51,8 @@ $(function () {
                             getClientsList();
                         }
                     });
-                    drawGraphs();
+                    drawLineGraphs();
+                    drawPieGraphs();
                     initialized[3] = true;
                 }
             }
@@ -257,19 +258,19 @@ $(function () {
     $("#pierange").selectmenu();
     $("#type").selectmenu();
     $("#pietype").selectmenu();
-    $("#pielevel").selectmenu();
+    $("#piegroup").selectmenu();
     $("#requestChart").button()
-    $("#requestChartProduction").button()
+    $("#requesPeiChart").button()
     $("#chartlinesfrom").button()
     $("#chartpiefrom").button()
     $("#chartlinesto").button()
     $("#chartpieto").button()
     $("#summFilter").button();
+    $("#piesummFilter").button();
+    $("#pieProductFilter").button();
+    $("#pieProducerFilter").button();
 //Создаем мультиселект
     $('#multiselect').multiselect();
-
-
-
     $("#level").selectmenu({
         change:function (event,ui) { //При указании масштаба запрашиваем данные о подчиненных клиентах для детализации графика
             $("#multiselect_to").find('option').remove()
@@ -314,9 +315,10 @@ $(function () {
     });
     $("#level").val('Все заказы').selectmenu('refresh')
 
-//Построение графиков
-        function drawGraphs() {
+//Построение графиков по документам
+        function drawLineGraphs() {
             $("#requestChart").click(function () {
+                $('#multiselect_to option').prop('selected', true); //выбираем все строки из мультиселекта
                 $.ajax({
                     beforeSend: function() {
                         $("#loading").dialog({
@@ -414,6 +416,7 @@ $(function () {
                     var chart = new CanvasJS.Chart("chartdivlines"); //Создаем объект принимающий график
                     chart.options.title = { text: "" }; //Заголовок
                     chart.options.exportEnabled=true //Сохранение JPEG
+                    chart.options.zoomEnabled=true //Зуум
                     //опции осей
                     chart.options.axisX = axisXOption;
                     chart.options.axisY = {
@@ -439,7 +442,6 @@ $(function () {
                     //Заполняем данные о графике
                     chart.options.data = [];
                     for (i=0; i<header.length; i++) {
-
                         var series = {//Данные о типе графика
                             type: "line", //Тип графа
                             name: header[i], //Заголовок
@@ -457,10 +459,84 @@ $(function () {
                         }
                     };
                     chart.render();//отрисовываем график
+                });
+                });
+            }
+//Построение пирожковых графиков
+        function drawPieGraphs() {
+            $("#requesPeiChart").click(function () {
+                $.ajax({
+                    beforeSend: function() {
+                        $("#loading").dialog({
+                            modal: true,
+                            height: 50,
+                            width: 200,
+                            zIndex: 999,
+                            resizable: false,
+                            title: "Please wait loading..."
+                        })
+                        $("#loading").dialog("open");
+                    },
+                    methode:'GET',
+                    async:false,
+                    dataType:'json',
+                    url: 'php/pieChart.php',
+                    data: {
+                        from: $("#chartpiefrom").val(),
+                        to: $("#chartpieto").val(),
+                        type:$('#pietype').val(),
+                        group: $("#piegroup").val(),
+                        range: $("#pierange").val(),
+                        summFilter:$('#piesummFilter').val(),
+                        productFilter:$('#pieProductFilter').val(),
+                        producerFilter:$('#pieProducerFilter').val()
+                    }
+                })
+                    .fail(function() {
+                        $("#loading").dialog("close");
+                        alert( "error try later" );
+                    })
+                    .done (function (data) {//После ответа сервера рисуем график
+                    $("#loading").dialog("close");
+
+                    //ответ сервера переформатируем в подходящий объект
+                    var dataP = [];
+                    var totalSumm=0;
+                    $.each(data, function(index, value) {
+                        dataP.push( {y:value, indexLabel:index + '('+value.toString().replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ')+')'} )
+                        totalSumm+=value;
+                    });
+
+
+                    var chart = new CanvasJS.Chart("chartdivpie"); //Создаем объект принимающий график
+                    chart.options.data = [];
+                    chart.options.title={text:'Отчет по топам('+$("#pierange").val()+':'+totalSumm.toString().replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ')+')'}
+                    chart.options.legend= { //Легенда
+                        fontSize: 12,
+                        fontFamily: "comic sans ms",
+                        fontColor: "Sienna",
+                        horizontalAlign: "center", // left, center ,right
+                        verticalAlign: "top",  // top, center, bottom
+
+                    };
+
+                    var series = {//Данные о типе графика
+                        type: "doughnut", //Тип графа doughnut pie
+                        indexLabelPlacement: "outside",
+                        indexLabelLineColor: "green",
+                        indexLabelFontColor: "red",
+                        indexLabelFontSize: 14,
+                        //showInLegend: true, //отображение легенды
+                        legendText: "{indexLabel}", //Заголовками легенды становятся данные из indexLabel
+                        toolTipContent: "{y} - #percent %" //Подсказка показывает в процентах долю от общей суммы
+                    }
+                    series.dataPoints = dataP  //точки графика
+                    chart.options.data.push(series);
+                    chart.render();//отрисовываем график
 
                 });
-                });
-            };
+            })
+        }
 });
 
 
