@@ -15,9 +15,9 @@ $query = "Select Препарат +'; '+ Производитель as Productio
           order by Quantity DESC";
 
 $result=sqlsrv_query($conn,$query);
-$data=array();
+
 while ($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
-    $data[$row['Production']]=$row['Quantity'];
+
 }
 /*
 echo "<pre>";
@@ -35,11 +35,13 @@ $objPHPExcel->setActiveSheetIndex(0);
 $objWorksheet = $objPHPExcel->getActiveSheet();
 
 //Подписываем лист
-$objWorksheet->setTitle('Клевер');
+$objWorksheet->setTitle('Заказы');
 
 //Заполняем ячейки данными (Ячейки адресуются либо A1 либо через индексы где A1= (0,1)
-$objWorksheet->setCellValue('A1','Препарат');
-$objWorksheet->setCellValue('B1','Количество');
+$objWorksheet->setCellValue('A1','Дата');
+$objWorksheet->setCellValue('B1','Аптека');
+
+
 
 $xlsRow=2;
 foreach ($data as $key=>$value) {

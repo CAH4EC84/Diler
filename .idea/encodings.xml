@@ -3,9 +3,10 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/conf/login.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/js/repa.js" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/php/MailClass.inc" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/php/ClientListXML.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/MakeExcel.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/SendMail.php" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/php/ZakazReportExcel.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/accessQueries.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/clientList.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/lineChart.php" charset="UTF-8" />

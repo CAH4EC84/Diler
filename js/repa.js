@@ -36,13 +36,12 @@ $(function () {
                 }
                 //Рисуем графики
                 else if (ui.newTab.index() == 3 & !initialized[3]) {
-                    $("#chartlinesfrom, #chartlinesto , #chartpiefrom, #chartpieto").datepicker({
+                    $("#chartlinesfrom, #chartlinesto , #chartpiefrom, #chartpieto ").datepicker({
                         changeMonth: true,
                         changeYear: true,
                         dateFormat: "dd.mm.yy"});
                     $("#chartlinesfrom, #chartpiefrom ").datepicker( "setDate", "01.01.2016" );
                     $("#chartlinesto, #chartpieto").datepicker( "setDate", new Date() );
-
                     $("#accordion").accordion({ //аккордион
                         collapsible: true,
                         active: false,
@@ -54,6 +53,36 @@ $(function () {
                     drawLineGraphs();
                     drawPieGraphs();
                     initialized[3] = true;
+                }
+                //Делаем EXCEL отчеты
+                else if (ui.newTab.index() == 4 && !initialized[4]) {
+
+                    $("#ZakazReport").button();
+                    $("#ZakazReport").click (function (){
+                        $.ajax({
+                            methode:'GET',
+                            url:'php/ZakazReportExcel.php',
+                            data: {from: $("#Excelfrom").val(),to: $("#Excelto").val(),
+                            },
+                            timeout: 180000
+                        })
+
+                            .done (function () {
+                            location.href+='/output/Report.xlsx';
+                        });
+                    })
+                    $("#TopReport").button();
+                    $("#ProductionReport").button();
+                    $("#ProductionProducerReport").button();
+                    $("#Excelfrom , #Excelto").datepicker({
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: "dd.mm.yy"});
+                    $("#Excelfrom").datepicker( "setDate", "01.01.2016" );
+                    $("#Excelto").datepicker( "setDate", new Date() );
+                    $("#Excelfrom").button();
+                    $("#Excelto").button();
+                    initialized[4] = true;
                 }
             }
         });
@@ -199,10 +228,6 @@ $(function () {
             $("#firmsInfo").jqGrid('filterToolbar', {});
         }
 
-        function creationGrid2() {
-            console.log('MORE GRID');
-        }
-
 //Автодополнение поисковых полей.
         function makeAutoComplite() {
             //Узнаем с какой таблицей и полем работает пользователь.
@@ -269,6 +294,7 @@ $(function () {
     $("#piesummFilter").button();
     $("#pieProductFilter").button();
     $("#pieProducerFilter").button();
+
 //Создаем мультиселект
     $('#multiselect').multiselect();
     $("#level").selectmenu({
