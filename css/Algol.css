@@ -9,6 +9,8 @@
     max-height: 200px;
     margin: 30px auto;
     font: bold italic 15px serif;
+    z-index: 999;
+
 }
 
 #sqlStructureResult{

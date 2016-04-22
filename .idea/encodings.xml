@@ -6,6 +6,7 @@
     <file url="file://$PROJECT_DIR$/php/ClientListXML.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/MakeCOMExcel.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/MakePHPExcel.php" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/php/MakeXml.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/SendMail.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/ZakazReportExcel.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/php/accessQueries.php" charset="UTF-8" />

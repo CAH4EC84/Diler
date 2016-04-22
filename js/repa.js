@@ -50,6 +50,7 @@ $(function () {
                             getClientsList();
                         }
                     });
+                    $("#GetChartXML").button();
                     drawLineGraphs();
                     drawPieGraphs();
                     initialized[3] = true;
@@ -294,6 +295,7 @@ $(function () {
     $("#piesummFilter").button();
     $("#pieProductFilter").button();
     $("#pieProducerFilter").button();
+    $("#nodes_id, #doc_id, .CollButton").button();
 
 //Создаем мультиселект
     $('#multiselect').multiselect();
@@ -344,6 +346,7 @@ $(function () {
 //Построение графиков по документам
         function drawLineGraphs() {
             $("#requestChart").click(function () {
+                filename='output/'+Math.uuid();
                 $('#multiselect_to option').prop('selected', true); //выбираем все строки из мультиселекта
                 $.ajax({
                     beforeSend: function() {
@@ -368,7 +371,9 @@ $(function () {
                         range: $("#range").val(),
                         level:$('#level').val(),
                         ids:$('#multiselect_to').val(),
-                        summFilter:$('#summFilter').val()
+                        summFilter:$('#summFilter').val(),
+                        saveXML:$("#GetChartXML + .ui-state-active").length,
+                        fname:filename
                     }
                     })
                     .fail(function() {
@@ -377,6 +382,7 @@ $(function () {
                     })
                     .done (function (data) {//После ответа сервера рисуем график
                     $("#loading").dialog("close");
+                    console.log(data);
                     var header=[];
                     var dataP = [];
                     var line=[];
@@ -486,6 +492,11 @@ $(function () {
                     };
                     chart.render();//отрисовываем график
                 });
+                if ($("#GetChartXML + .ui-state-active").length) {
+                  console.log('Сохранялко вкл');
+                    $("#ASaveXml").attr("href",filename);
+                    $("#ASaveXml")[0].click()
+                };
                 });
             }
 //Построение пирожковых графиков

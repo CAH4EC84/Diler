@@ -16,10 +16,21 @@ $type=$_GET['type'];
 $range=$_GET['range'];
 $level=$_GET['level'];
 $summFilter=$_GET['summFilter'];
+$saveXML=$_GET['saveXML'];
+$xmlFileName=$_GET['fname'];
 
 $params = array();
 $params[] = $fromDate;
 $params[] = $toDate;
+
+
+$note=<<<XML
+<report>
+<body>
+</body>
+</report>
+XML;
+$xml= new SimpleXMLElement($note);
 
 
 // Подключаемся к MSSQL
@@ -146,20 +157,28 @@ if ($summFilter) {
 $query=$qSelect.'SUM(Сумма) as Summ '.$subQuery.$qJoin.$qGroup.$qHaving.$qOrder;
 
 //echo $query ."<hr>";
-
 $result=sqlsrv_query($conn,$query,$params) or die( print_r( sqlsrv_errors(), true));
-
 $tmp=array();
 while($row=sqlsrv_fetch_array($result,SQLSRV_FETCH_ASSOC)) {
+    $record =$xml->body->addChild("record");
     if ($row['NAME']) {
-        $tmp[$row['NAME']][$row['DATA']] = round($row['Summ'],0);
+        $tmp[$row['NAME']][$row['DATA']] = round($row['Summ'], 0);
+        $record->addChild('Клиент',$row['NAME']);
+        $record->addChild('Дата',$row['DATA']);
+        $record->addChild('Сумма',$row['Summ']);
     } else {
-        $tmp[$row['DATA']]=round($row['Summ'],0);
-    }
-
+        $tmp[$row['DATA']] = round($row['Summ'], 0);
+        $record->addChild('Дата',$row['DATA']);
+        $record->addChild('Сумма',$row['Summ']);
+        }
 }
 
+//Сохраняем как JSON для графика
 $data=json_encode($tmp);
 echo $data;
+
+
+//Сохраняем как XML
+ if ($saveXML) {$xml->asXML('../'.$xmlFileName);};
 
 ?>

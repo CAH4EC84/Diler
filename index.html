@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="css/Algol.css">
     <!--Мой JS-->
     <script type="text/javascript" src="js/repa.js"></script>
+    <script type="text/javascript" src="js/uuid.js"></script>
 
     <title>МедСервис</title>
 </head>
@@ -48,11 +49,10 @@
         <div id="pager2"></div>
     </div>
     <div id="tabs-3">
-            <input id="nodes_id" type="text" size="4">
-            <input id="doc_id" type="text" size="4">
-            <input type="button" value="request">
+            <input id="nodes_id" type="text" size="4" placeholder="Узел">
+            <input id="doc_id" type="text" size="4" placeholder="Тип документа">
+            <input type="button" value="request" class="CollButton">
         <div id="sqlStructureResult" >
-            SQL STRUCTURE
         </div>
     </div>
     <div id ="tabs-4">
@@ -98,6 +98,9 @@
                         </div>
                     </div>
                 </div>
+                <a id="ASaveXml"  href="" download></a>
+                <input id="GetChartXML" value="Save XML" type="checkbox"><label for="GetChartXML">Save XML</label>
+                <br>
                 <input type="button" value="Запрос" id="requestChart">
                 <div id="completeChart">
                     <div id="chartdivlines" class="mychart" style="height: 500px; width: 100%;" ></div>
